@@ -17,6 +17,9 @@ public:
     //конструктор (неявное преобразование типов T -> Grid<T, dim> 1x...x1)
     Grid(T const &t);
 
+    //конструктор по умолчанию (создает пустую сетку)
+    Grid();
+
     //конструктор копирования
     Grid(Grid<T, dim> const &copy);
 
@@ -24,8 +27,10 @@ public:
     Grid(Grid<T, dim> &&copy); 
 
     //оператор присваивания копированием
+    Grid<T, dim>& operator=(Grid<T, dim> const &src);
 
     //оператор присваивания перемещением
+    Grid<T, dim>& operator=(Grid<T, dim> &&src);
 
     //деструктор
     ~Grid(); 
@@ -35,6 +40,14 @@ public:
 
     //оператор индексирования
     Grid<T, dim - 1>& operator[] (size_type idx) const; 
+
+    //другой оператор индексирования 
+    template <typename ...Dims>
+    T operator()(size_type idx, Dims... other) const;
+
+    //другой оператор индексирования 
+    template <typename ...Dims>
+    T& operator()(size_type idx, Dims... other);
 
     //печать сетки
     void print() const ; 
@@ -58,6 +71,9 @@ public:
     //конструктор (неявное преобразование типов T -> Grid<T, 1>)
     Grid(T const &t);
 
+    //конструктор по умолчанию (создает пустую сетку)
+    Grid();
+
     //конструктор копирования
     Grid(Grid<T, 1> const &copy);
 
@@ -65,8 +81,10 @@ public:
     Grid(Grid<T, 1> &&copy);
 
     //оператор присваивания копированием
+    Grid<T, 1>& operator=(Grid<T, 1> const &src);
 
     //оператор присваивания перемещением
+    Grid<T, 1>& operator=(Grid<T, 1> &&src);
 
     //деструктор
     ~Grid();
@@ -76,6 +94,12 @@ public:
 
     //оператор индексирования
     T& operator[] (size_type idx) const ;
+
+    //другой оператор индексирования 
+    T operator()(size_type idx) const ;
+
+    //другой оператор индексирования 
+    T& operator()(size_type idx);
 
     //печать сетки
     void print() const ;
@@ -125,6 +149,20 @@ Grid<T, 1>::Grid(T const &t) :
     Grid<T, 1>(1, t) { };
 
 template <typename T, std::size_t dim>
+Grid<T, dim>::Grid() : 
+    //конструктор по умолчанию (создает пустую сетку)
+
+    buffer(nullptr), 
+    buffer_size(0) { }
+
+template <typename T>
+Grid<T, 1>::Grid() : 
+    //конструктор по умолчанию (создает пустую сетку)
+
+    buffer(nullptr), 
+    buffer_size(0) { }
+
+template <typename T, std::size_t dim>
 Grid<T, dim>::Grid(Grid<T, dim> const &copy) :
     //конструктор копирования 
 
@@ -164,6 +202,50 @@ Grid<T, 1>::Grid(Grid<T, 1> &&copy) :
     buffer_size(copy.buffer_size) {
     copy.buffer = nullptr;
     copy.buffer_size = 0;
+}
+
+template <typename T, std::size_t dim>
+Grid<T, dim>& Grid<T, dim>::operator=(Grid<T, dim> const &src) { 
+    //оператор присваивания копированием
+
+    if (std::addressof(src) == this) return *this;
+    Grid<T, dim> tmp(src); 
+    std::swap(buffer, tmp.buffer);
+    buffer_size = tmp.buffer_size;
+    return *this;
+}
+
+template <typename T>
+Grid<T, 1>& Grid<T, 1>::operator=(Grid<T, 1> const &src) { 
+    //оператор присваивания копированием
+
+    if (std::addressof(src) == this) return *this;
+    Grid<T, 1> tmp(src); 
+    std::swap(buffer, tmp.buffer);
+    buffer_size = tmp.buffer_size;
+    return *this;
+}
+
+template <typename T, std::size_t dim>
+Grid<T, dim>& Grid<T, dim>::operator=(Grid<T, dim> &&src) {
+    //оператор присваивания перемещением
+
+    if (this == std::addressof(src)) return *this;
+    Grid<T, dim> tmp(std::move(src));
+    std::swap(this->buffer, tmp.buffer);
+    buffer_size = tmp.buffer_size;
+    return *this;
+}
+
+template <typename T>
+Grid<T, 1>& Grid<T, 1>::operator=(Grid<T, 1> &&src) {
+    //оператор присваивания перемещением
+
+    if (this == std::addressof(src)) return *this;
+    Grid<T, 1> tmp(std::move(src));
+    std::swap(this->buffer, tmp.buffer);
+    buffer_size = tmp.buffer_size;
+    return *this;
 }
 
 template <typename T, std::size_t dim>
@@ -223,6 +305,11 @@ Grid<T, dim - 1>& Grid<T, dim>::operator[](size_type idx) const {
 
     if (buffer == nullptr) {
         std::cout << "Empty grid\n";
+        exit(1);
+    }
+    if (idx >= buffer_size) {
+        std::cout << "Invalid index\n";
+        exit(1);
     }
     return  buffer[idx]; 
 }
@@ -233,6 +320,73 @@ T& Grid<T, 1>::operator[] (size_type idx) const {
 
     if (buffer == nullptr) {
         std::cout << "Empty grid\n";
+        exit(1);
+    }
+    if (idx >= buffer_size) {
+        std::cout << "Invalid index\n";
+        exit(1);
+    }
+    return buffer[idx];
+}
+
+template <typename T, std::size_t dim>
+template <typename ...Dims>
+T Grid<T, dim>::operator()(size_type idx, Dims... other) const {
+    //другой оператор индексирования 
+
+    if (buffer == nullptr) {
+        std::cout << "Empty grid\n";
+        exit(1);
+    }
+    if (idx >= buffer_size) {
+        std::cout << "Invalid index\n";
+        exit(1);
+    }
+    return buffer[idx](other...);
+}
+
+template <typename T>
+T Grid<T, 1>::operator()(size_type idx) const {
+    //другой оператор индексирования 
+
+    if (buffer == nullptr) {
+        std::cout << "Empty grid\n";
+        exit(1);
+    }
+    if (idx >= buffer_size) {
+        std::cout << "Invalid index\n";
+        exit(1);
+    }
+    return buffer[idx];
+}
+
+template <typename T, std::size_t dim>
+template <typename ...Dims>
+T& Grid<T, dim>::operator()(size_type idx, Dims... other) {
+    //другой оператор индексирования 
+
+    if (buffer == nullptr) {
+        std::cout << "Empty grid\n";
+        exit(1);
+    }
+    if (idx >= buffer_size) {
+        std::cout << "Invalid index\n";
+        exit(1);
+    }
+    return buffer[idx](other...);
+}
+
+template <typename T>
+T& Grid<T, 1>::operator()(size_type idx) {
+    //другой оператор индексирования 
+
+    if (buffer == nullptr) {
+        std::cout << "Empty grid\n";
+        exit(1);
+    }
+    if (idx >= buffer_size) {
+        std::cout << "Invalid index\n";
+        exit(1);
     }
     return buffer[idx];
 }

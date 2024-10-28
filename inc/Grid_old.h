@@ -88,7 +88,7 @@ public:
             data[idx].~T();
         }
         delete[] data;
-    } // деструктор
+    } 
 };
 
 
