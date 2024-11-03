@@ -1,66 +1,93 @@
 #include <Grid.h>
 #include <iostream>
+#include <memory>
 
-/*
-class int_with_default {
+class no_def_int {
     int i;
 public:
-    int_with_default() {
-        i = 0;
-    }
-    friend std::ostream& operator<<(std::ostream& os, const int_with_default& obj) {
+    no_def_int(int i): i(i) { }
+
+    friend std::ostream& operator<<(std::ostream& os, const no_def_int& obj) {
         os << obj.i;
         return os;
     }
 };
-*/
-/*
-int main() {
-    Grid<int, 2> a(2, 3, 0);
-    a.print();
-    std::cout << a.get_dim_size(1) << '\n';
 
+struct Luntik {
+    Luntik() {
+        setlocale(LC_ALL, "Russian");
+        std::cout << "������ " << this << ": � �������!\n";
+    }
+    ~Luntik() {
+        setlocale(LC_ALL, "Russian");
+        std::cout << "������ " << this << ": � ����!\n";
+    }
+};
+
+int main() {
+    std::cout << "construct default a\n";
+    Grid<int, 2> a(2, 3);
+    std::cout << "a " << &a << ":\n";
+    a.print();
+
+    std::cout << "fill a\n";
+    for (auto i = 0u; i < 2; ++i) {
+        for (auto j = 0u; j < 3; ++j) {
+            a[i][j] = i * 3 + j;
+        }
+    }
+    std::cout << "a " << &a << ":\n";
+    a.print();
+
+    std::cout << "construct b by copying a\n";
     Grid<int, 2> b(a);
+    std::cout << "b " << &b << ":\n";
+    b.print();
+    std::cout << "a " << &a << ":\n";
+    a.print();
+
+    std::cout << "construct c\n";
+    Grid<int, 2> c(Grid<int, 2>(2, 3, 1));
+    std::cout << "c " << &c << ":\n";
+    c.print();
+
+    std::cout << "construct d by moving a\n";
+    Grid<int, 2> d(std::move(a));
+    std::cout << "d " << &d << ":\n";
+    d.print();
+    std::cout << "a " << &a << ":\n";
+    a.print();
+
+    std::cout << "construct e\n";
+    Grid<int, 2> e(2, 4, 2);
+    std::cout << "e " << &e << ":\n";
+    e.print();
+
+    std::cout << "copy \n[1, 1, 1, 1]\n[1, 1, 1, 1]\nto e\n";
+    e = Grid<int, 2>(2, 4, 1);
+    std::cout << "e " << &e << ":\n";
+    e.print();
+
+    std::cout << "copy b to c\n";
+    c = b;
+    std::cout << "c " << &c << ":\n";
+    c.print();
+    std::cout << "b " << &b << ":\n";
     b.print();
 
-    Grid<int, 2> c(Grid<int, 2>(2, 3, 1));
+    std::cout << "move e to c\n";
+    c = std::move(e);
+    std::cout << "c " << &c << ":\n";
     c.print();
-
-    Grid<int, 2> d(std::move(a));
-    d.print();
-    a.print();
-    std::cout << a.get_dim_size(0) << '\n';
-    //std::cout << a[0][0] << '\n';
-
-    c = b;
-    c.print();
-
-    c = std::move(b);
-    c.print();
+    std::cout << "e " << &b << ":\n";
+    e.print();
     
+    std::cout << "construct f from type with no default constructor\n";
+    Grid<no_def_int, 2> f(2, 3, 1);
+    std::cout << "f " << &f << ":\n";
+    f.print();
 
+    std::cout << "construct grid g of shared_pointers to Luntik\n";
+    Grid<std::shared_ptr<Luntik>, 3> g(10, 10, 10, std::shared_ptr<Luntik>(new Luntik()));
     return 0;
-}
-*/
-
-/*
--создание сетки от объектов, которые не содержат конструктора по умолчанию
--тестирование копирования
--тестирование перемещения
--тестирование работы оператора индексирования
--создание сетки от нетривиального типа (типа, который сам управляет ресурсом)
--для многомерных сеток покажите как работает принцип понижения размерности - 
-оператор индексирования возвращает сетку меньшей размерности.
-*/
-#include <cassert>
-int main() {
-    Grid<float,3> const g3(2, 3, 4, 1.0f);
-    assert(1.0f == g3(1, 1, 1));
-
-    Grid<float,2> g2(2, 5, 2.0f);
-    assert(2.0f == g2(1, 1));
-
-    g2 = g3[1];
-    assert(1.0f == g2(1, 1));
-
 }

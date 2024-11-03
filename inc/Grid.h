@@ -14,9 +14,6 @@ public:
     template <typename ...Dims>
     Grid(size_type buffer_size, Dims... other); 
 
-    //конструктор (неявное преобразование типов T -> Grid<T, dim> 1x...x1)
-    Grid(T const &t);
-
     //конструктор по умолчанию (создает пустую сетку)
     Grid();
 
@@ -67,9 +64,6 @@ public:
 
     //конструктор со значением default T по всей сетке
     Grid(std::size_t buffer_size);
-
-    //конструктор (неявное преобразование типов T -> Grid<T, 1>)
-    Grid(T const &t);
 
     //конструктор по умолчанию (создает пустую сетку)
     Grid();
@@ -134,21 +128,6 @@ Grid<T, 1>::Grid(std::size_t buffer_size) :
     Grid<T, 1>(buffer_size, T()) { }
 
 template <typename T, std::size_t dim>
-Grid<T, dim>::Grid(T const &t) :
-    //конструктор (неявное преобразование типов T -> Grid<T, dim> 1x...x1)
-
-    buffer(reinterpret_cast<Grid<T, dim - 1>*>( operator new(sizeof(Grid<T, dim - 1>)) )), 
-    buffer_size(1) {
-    new ((char*)buffer) Grid<T, dim - 1>(t);
-}
-
-template <typename T>
-Grid<T, 1>::Grid(T const &t) :
-    //конструктор (неявное преобразование типов T -> Grid<T, 1>)
-
-    Grid<T, 1>(1, t) { };
-
-template <typename T, std::size_t dim>
 Grid<T, dim>::Grid() : 
     //конструктор по умолчанию (создает пустую сетку)
 
@@ -211,7 +190,7 @@ Grid<T, dim>& Grid<T, dim>::operator=(Grid<T, dim> const &src) {
     if (std::addressof(src) == this) return *this;
     Grid<T, dim> tmp(src); 
     std::swap(buffer, tmp.buffer);
-    buffer_size = tmp.buffer_size;
+    std::swap(buffer_size, tmp.buffer_size);
     return *this;
 }
 
@@ -222,7 +201,7 @@ Grid<T, 1>& Grid<T, 1>::operator=(Grid<T, 1> const &src) {
     if (std::addressof(src) == this) return *this;
     Grid<T, 1> tmp(src); 
     std::swap(buffer, tmp.buffer);
-    buffer_size = tmp.buffer_size;
+    std::swap(buffer_size, tmp.buffer_size);
     return *this;
 }
 
@@ -233,7 +212,7 @@ Grid<T, dim>& Grid<T, dim>::operator=(Grid<T, dim> &&src) {
     if (this == std::addressof(src)) return *this;
     Grid<T, dim> tmp(std::move(src));
     std::swap(this->buffer, tmp.buffer);
-    buffer_size = tmp.buffer_size;
+    std::swap(buffer_size, tmp.buffer_size);
     return *this;
 }
 
@@ -244,7 +223,7 @@ Grid<T, 1>& Grid<T, 1>::operator=(Grid<T, 1> &&src) {
     if (this == std::addressof(src)) return *this;
     Grid<T, 1> tmp(std::move(src));
     std::swap(this->buffer, tmp.buffer);
-    buffer_size = tmp.buffer_size;
+    std::swap(buffer_size, tmp.buffer_size);
     return *this;
 }
 
@@ -255,7 +234,7 @@ Grid<T, dim>::~Grid() {
     for(size_type idx = 0; idx != buffer_size; ++idx) {
         buffer[idx].~Grid<T, dim - 1>();
     }
-    delete[] buffer;
+    operator delete(static_cast<void*>(buffer));
 }
 
 template <typename T>
@@ -265,7 +244,7 @@ Grid<T, 1>::~Grid() {
     for(size_type idx = 0; idx != buffer_size; ++idx) {
         buffer[idx].~T();
     }
-    delete[] buffer;
+    operator delete(static_cast<void*>(buffer));
 }
 
 
@@ -399,11 +378,11 @@ void Grid<T, dim>::print() const {
         std::cout << "Empty grid\n";
         return;
     }
+    std::cout << "[\n";
     for (size_type idx = 0; idx != buffer_size; ++idx) {
-        std::cout << "[";
         buffer[idx].print();
-        std::cout << "]\n";
     }
+    std::cout << "]\n";
 }
 
 template <typename T>
@@ -414,7 +393,9 @@ void Grid<T, 1>::print() const {
         std::cout << "Empty grid\n";
         return;
     }
+    std::cout << "[";
     for (size_type idx = 0; idx != buffer_size; ++idx) {
         std::cout << " " << buffer[idx] << " ";
     }
+    std::cout << "]\n";
 }
