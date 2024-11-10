@@ -36,9 +36,12 @@ public:
     size_type get_dim_size(std::size_t dim_num) const;
 
     //оператор индексирования
-    Grid<T, dim - 1>& operator[] (size_type idx) const; 
+    Grid<T, dim - 1>& operator[] (size_type idx); 
 
-    //другой оператор индексирования 
+    //оператор индексирования для констант
+    const Grid<T, dim - 1>& operator[] (size_type idx) const; 
+
+    //другой оператор индексирования для констант
     template <typename ...Dims>
     T operator()(size_type idx, Dims... other) const;
 
@@ -87,9 +90,12 @@ public:
     size_type get_dim_size(std::size_t dim_num) const;
 
     //оператор индексирования
-    T& operator[] (size_type idx) const ;
+    T& operator[] (size_type idx);
 
-    //другой оператор индексирования 
+    //оператор индексирования для констант
+    const T& operator[] (size_type idx) const ;
+
+    //другой оператор индексирования для констант
     T operator()(size_type idx) const ;
 
     //другой оператор индексирования 
@@ -279,7 +285,22 @@ typename Grid<T, 1>::size_type Grid<T, 1>::get_dim_size(std::size_t dim_num) con
 
 
 template <typename T, std::size_t dim>
-Grid<T, dim - 1>& Grid<T, dim>::operator[](size_type idx) const { 
+const Grid<T, dim - 1>& Grid<T, dim>::operator[](size_type idx) const { 
+    //оператор индексирования
+
+    if (buffer == nullptr) {
+        std::cout << "Empty grid\n";
+        exit(1);
+    }
+    if (idx >= buffer_size) {
+        std::cout << "Invalid index\n";
+        exit(1);
+    }
+    return  buffer[idx]; 
+}
+
+template <typename T, std::size_t dim>
+Grid<T, dim - 1>& Grid<T, dim>::operator[](size_type idx) { 
     //оператор индексирования
 
     if (buffer == nullptr) {
@@ -294,7 +315,22 @@ Grid<T, dim - 1>& Grid<T, dim>::operator[](size_type idx) const {
 }
 
 template <typename T>
-T& Grid<T, 1>::operator[] (size_type idx) const {
+const T& Grid<T, 1>::operator[] (size_type idx) const {
+    //оператор индексирования для констант
+
+    if (buffer == nullptr) {
+        std::cout << "Empty grid\n";
+        exit(1);
+    }
+    if (idx >= buffer_size) {
+        std::cout << "Invalid index\n";
+        exit(1);
+    }
+    return buffer[idx];
+}
+
+template <typename T>
+T& Grid<T, 1>::operator[] (size_type idx) {
     //оператор индексирования
 
     if (buffer == nullptr) {

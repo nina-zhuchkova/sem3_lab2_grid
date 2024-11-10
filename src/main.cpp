@@ -22,9 +22,15 @@ struct Luntik {
         setlocale(LC_ALL, "Russian");
         std::cout << "Лунтик " << this << ": Я умер!\n";
     }
+    Luntik(Luntik const &) {
+        setlocale(LC_ALL, "Russian");
+        std::cout << "Лунтик " << this << ": Я родился копированием!\n";
+    }
 };
 
+
 int main() {
+
     std::cout << "construct default a\n";
     Grid<int, 2> a(2, 3);
     std::cout << "a " << &a << ":\n";
@@ -87,7 +93,30 @@ int main() {
     std::cout << "f " << &f << ":\n";
     f.print();
 
+    {
     std::cout << "construct grid g of shared_pointers to Luntik\n";
     Grid<std::shared_ptr<Luntik>, 3> g(10, 10, 10, std::shared_ptr<Luntik>(new Luntik()));
+    }
+
+    //работа с константами
+    //Grid<int, 2> const p(2, 2, -1);
+    //std::cout << p[0][0] << '\n';
+    //p[0][0] = 0;
+
+    std::cout << "create r:\n";
+    Grid<int, 3> r(2, 2, 2, 3);
+    std::cout << "before moving r to itself\n";
+    r.print();
+    r = std::move(r);
+    std::cout << "after moving r to itself\n";
+    r.print();
+
+    std::cout << "create original luntik:\n";
+    Luntik k;
+    std::cout << "create original grid:\n";
+    Grid<Luntik, 3> g1(2, 2, 2, k);
+    std::cout << "move grid:\n";
+    Grid<Luntik, 3> g2(std::move(g1));
+    std::cout << "end\n";
     return 0;
 }
